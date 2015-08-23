@@ -69,7 +69,7 @@ input {
     margin-bottom: 10px;
     font-size: 22px;
     padding: 5px;
-    width: 340px;
+
 }
 
 #new-note, .edit-note {
@@ -156,5 +156,7 @@ label.note-content {
     body {
         width: 100%;
     }
+
+
 
 }

@@ -16,19 +16,19 @@
             notesListEl = document.createElement("li");
             noteText = localStorage.getItem(localStorage.key(i));
             //our list of notes should only contain those values from local storage, whose keys start with "note"
-            //if (localStorage.key(i).substring(0, 4) === "note")) {
-            notesListEl.innerHTML =
-                "<div class='note' id='" + localStorage.key(i) + "'>" +
-                    "<div>" +
-                        "<label class='note-content'>" + noteText + "</label>" +
-                        "<button class='note-destroy'></button>" +
-                    "</div>" +
-                    "<div class='hidden'>" +
-                        "<input class='edit-note' type='text' maxlength='" + maxLength + "' value='" + noteText + "'></input>" +
-                    "</div>" +
-                "</div>";
+            if (localStorage.key(i).substring(0, 4) === "note") {
+                notesListEl.innerHTML =
+                    "<div class='note' id='" + localStorage.key(i) + "'>" +
+                        "<div>" +
+                            "<label class='note-content'>" + noteText + "</label>" +
+                            "<button class='note-destroy'></button>" +
+                        "</div>" +
+                        "<div class='hidden'>" +
+                            "<input class='edit-note' type='text' maxlength='" + maxLength + "' value='" + noteText + "'></input>" +
+                        "</div>" +
+                    "</div>";
             document.getElementById("notes").appendChild(notesListEl);
-            //}
+            }
         }
     }
 

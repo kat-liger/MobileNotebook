@@ -2,42 +2,52 @@
 
 (function () {
     "use strict";
-    var i, notes;
+    var i, notes,
+        //the maximum allowed length of note
+        maxLength = 800;
 
+    /**
+     * Show the list of notes stored in local storage (the most recent go first)
+     */
     function init() {
         var notesListEl, noteText;
         //filling the list of notes
-        for (i = 0; i < localStorage.length; i = i + 1) {
+        for (i = localStorage.length - 1; i >= 0; i = i - 1) {
             notesListEl = document.createElement("li");
             noteText = localStorage.getItem(localStorage.key(i));
-            //our list of notes should only contain those values from local storage, whose keys start with "notebook"
-            if ((localStorage.key(i) !== "notebook.maxCount") && (localStorage.key(i).substring(0, 8) === "notebook")) {
-                notesListEl.innerHTML =
-                    "<div class='note' id='" + localStorage.key(i) + "'>" +
-                        "<div>" +
-                            "<label class='note-content'>" + noteText + "</label>" +
-                            "<button class='note-destroy'></button>" +
-                        "</div>" +
-                        "<div class='hidden'>" +
-                            "<input class='edit-note' type='text' value='" + noteText + "'></input>" +
-                        "</div>" +
-                    "</div>";
-                document.getElementById("notes").appendChild(notesListEl);
-            }
+            //our list of notes should only contain those values from local storage, whose keys start with "note"
+            //if (localStorage.key(i).substring(0, 4) === "note")) {
+            notesListEl.innerHTML =
+                "<div class='note' id='" + localStorage.key(i) + "'>" +
+                    "<div>" +
+                        "<label class='note-content'>" + noteText + "</label>" +
+                        "<button class='note-destroy'></button>" +
+                    "</div>" +
+                    "<div class='hidden'>" +
+                        "<input class='edit-note' type='text' maxlength='" + maxLength + "' value='" + noteText + "'></input>" +
+                    "</div>" +
+                "</div>";
+            document.getElementById("notes").appendChild(notesListEl);
+            //}
         }
     }
 
-    //replace content of note with content of input when edit is finished
+    /**
+     * Replace content of note with the content of input when edit is finished
+     * @param {string} noteId - the id of the note in local storage database
+     */
     function inputToNote(noteId) {
         var divToUpdate = document.getElementById(noteId), newText;
         if (!divToUpdate) { return; }
         //getting the content of input
         newText = divToUpdate.lastChild.querySelector(".edit-note").value;
-        //proceeding only if input is not empty and consists not only of whitespaces
+        //proceeding only if input is not empty and doesn't contain only whitespaces
         if (/\S/.test(newText)) {
-            //updating note to local Storage
+            //trimming the note content to acceptable length
+            newText = newText.substring(0, maxLength);
+            //updating note value in local storage
             localStorage.setItem(noteId, newText);
-            //updating the first div
+            //updating the label content, making input hidden and label visible
             divToUpdate.firstChild.querySelector(".note-content").textContent = newText;
             divToUpdate.firstChild.classList.remove("hidden");
             divToUpdate.lastChild.setAttribute("class", "hidden");
@@ -45,10 +55,12 @@
             //remove the note
             removeNoteById(noteId);
         }
-        return;
     }
 
-    //updating the existing note
+    /**
+     * Update the existing note
+     * @param {event} e - the event that happens when the note content is clicked
+     */
     function onUpdateNote(e) {
         var noteId = e.target.parentElement.parentElement.id,
             divToUpdate = document.getElementById(noteId);
@@ -67,6 +79,10 @@
         });
     }
 
+    /**
+     * Remove the existing note by its id
+     * @param {string} noteId - the id of the note in local storage database
+     */
     function removeNoteById(noteId) {
         var note, destroyButton, elem, liToRemove;
         //making sure that the note exists
@@ -86,13 +102,20 @@
         liToRemove.parentNode.removeChild(liToRemove);
     }
 
-    //remove a note
+    /**
+     * Start removing the note by calling removeNoteById
+     * @param {event} e - the event that happens when the delete button is clicked
+     */
     function onRemoveNote(event) {
         var noteId = event.target.parentElement.parentElement.id;
         removeNoteById(noteId);
     }
 
-    //subscribe a note
+    /**
+     * Subscribe a note to click events using its id: we use it on load for existing notes
+     * and then every time when a new note is created
+     * @param {string} noteId - the id of the note in local storage database
+     */
     function subscribeNote(noteId) {
         var note, noteContent, destroyButton;
         note = document.getElementById(noteId);
@@ -102,46 +125,51 @@
         destroyButton.addEventListener("click", onRemoveNote);
     }
 
+    /**
+     * Create a new note
+     * @param {event} e - the event that happens when enter is pressed on new-note input
+     */
     function onKeyPressHandler(e) {
-        //adding a new note
-        var newNoteEl, count, newNote,
+        var newNoteEl, newNote, list,
             event = e || window.event,
-            charCode = event.which || event.keyCode;
-        if (localStorage["notebook.maxCount"] === undefined) {
-            localStorage["notebook.maxCount"] = 0;
-        }
-        count = parseInt(localStorage["notebook.maxCount"], 10) + 1;
+            charCode = event.which || event.keyCode,
+            count = Date.now();
         if (charCode === 13) {
             //getting the content of input
             newNote = document.getElementById("new-note").value;
+            //trimming the note content to acceptable length
+            newNote = newNote.substring(0, maxLength);
             //saving new note to local Storage
-            localStorage["notebook.note" + count] = newNote;
-            localStorage["notebook.maxCount"] = parseInt(localStorage["notebook.maxCount"], 10) + 1;
+            localStorage["note" + count] = newNote;
             //removing the content of input
             document.getElementById("new-note").value = '';
             //adding new note to DOM
             newNoteEl = document.createElement("li");
             newNoteEl.innerHTML =
-                "<div class='note' id='notebook.note" + count + "'>" +
+                "<div class='note' id='note" + count + "'>" +
                     "<div>" +
                         "<label class='note-content'>" + newNote + "</label>" +
                         "<button class='note-destroy'></button>" +
                     "</div>" +
                     "<div class='hidden'>" +
-                        "<input class='edit-note' type='text' value='" + newNote + "'></input>" +
+                        "<input class='edit-note' type='text' maxlength='" + maxLength + "' value='" + newNote + "'></input>" +
                     "</div>" +
                 "</div>";
-            document.getElementById("notes").appendChild(newNoteEl);
+            list =  document.getElementById("notes");
+            if (list.firstChild) {
+                list.insertBefore(newNoteEl, list.firstChild);
+            } else {
+                list.appendChild(newNoteEl);
+            }
             //after adding a new note input loses focus
             document.getElementById("new-note").blur();
             //making sure that the newly added div listens to events
-            subscribeNote("notebook.note" + count);
-            return false;
+            subscribeNote("note" + count);
         }
     }
 
     /**
-     * subscribe the initial list of notes
+     * Subscribe the initial list of notes to events
      */
     function subscribe() {
         //subscribe the new-note input
@@ -153,6 +181,9 @@
         }
     }
 
+    /**
+     * The initial actions made after app is loaded
+     */
     window.addEventListener("load", function () {
         init();
         subscribe();
